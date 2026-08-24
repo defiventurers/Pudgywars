@@ -90,7 +90,13 @@ SDL_Renderer* createRenderer(SDL_Window* window)
         throw_error("Couldn't create renderer: {}", SDL_GetError());
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+#ifdef __EMSCRIPTEN__
+    // The browser surface is often enlarged to fill a landscape phone. Linear filtering
+    // avoids severe blockiness without changing the native logical canvas or desktop art.
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+#else
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+#endif
     SDL_RenderSetLogicalSize(renderer, GFX_SCREEN_W, GFX_SCREEN_H);
 
     SDL_RendererInfo renderer_info;

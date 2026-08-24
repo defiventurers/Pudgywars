@@ -19,6 +19,7 @@ enum TouchAction : int {
 };
 
 std::unordered_map<SDL_FingerID, int> touch_actions;
+short last_touch_game_state = 1;
 
 int actionForTouch(const SDL_TouchFingerEvent& touch)
 {
@@ -46,7 +47,7 @@ void applyTouchActions(COutputControl& output, short gameState)
     const bool gameKeys[NUM_KEYS] = {
         (combined & TouchLeft) != 0,
         (combined & TouchRight) != 0,
-        (combined & TouchUp) != 0,
+        (combined & TouchUp) != 0 || (combined & TouchAction) != 0,
         (combined & TouchDown) != 0,
         (combined & TouchAction) != 0,
         false,
@@ -71,6 +72,45 @@ void applyTouchActions(COutputControl& output, short gameState)
     }
 }
 } // namespace
+
+extern "C" void pudgywars_mobile_control(int slot, int action, int pressed)
+{
+    (void)slot;
+    CInputPlayerControl* player = game_values.playerInput.inputControls[0];
+    if (!player)
+        return;
+
+    auto push_key = [pressed](SDL_Keycode key) {
+        if (key == KEY_NONE)
+            return;
+        SDL_Event event{};
+        event.type = pressed ? SDL_KEYDOWN : SDL_KEYUP;
+        event.key.state = pressed ? SDL_PRESSED : SDL_RELEASED;
+        event.key.repeat = 0;
+        event.key.keysym.sym = key;
+        SDL_PushEvent(&event);
+    };
+
+    const CInputControl& keys = player->inputGameControls[last_touch_game_state == 0 ? 0 : 1];
+    if (last_touch_game_state == 0) {
+        if (action & TouchLeft) push_key(keys.game_left);
+        if (action & TouchRight) push_key(keys.game_right);
+        if (action & TouchUp) push_key(keys.game_jump);
+        if (action & TouchDown) push_key(keys.game_down);
+        if (action & TouchAction) {
+            push_key(keys.game_jump);
+            push_key(keys.game_turbo);
+        }
+        if (action & TouchCancel) push_key(keys.game_cancel);
+    } else {
+        if (action & TouchUp) push_key(keys.menu_up);
+        if (action & TouchDown) push_key(keys.menu_down);
+        if (action & TouchLeft) push_key(keys.menu_left);
+        if (action & TouchRight) push_key(keys.menu_right);
+        if (action & TouchAction) push_key(keys.menu_select);
+        if (action & TouchCancel) push_key(keys.menu_cancel);
+    }
+}
 #endif
 
 CPlayerInput::CPlayerInput()
@@ -134,7 +174,8 @@ void CPlayerInput::ResetKeys()
 //iGameState == 0 for in game and 1 for menu
 void CPlayerInput::Update(SDL_Event event, short iGameState)
 {
-#ifdef __EMSCRIPTEN__
+	#ifdef __EMSCRIPTEN__
+    last_touch_game_state = iGameState;
     if (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERMOTION || event.type == SDL_FINGERUP) {
         if (event.type == SDL_FINGERUP)
             touch_actions.erase(event.tfinger.fingerId);
