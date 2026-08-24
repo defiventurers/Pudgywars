@@ -204,7 +204,7 @@ void create_globals()
     try {
         UpdateMusicWithOverrides(*musiclist, *worldmusiclist);
     } catch (const std::exception& ex) {
-        throw std::format("ERROR: Could not load music overrides: {}", ex.what());
+        throw std::string("ERROR: Could not load music overrides: ") + ex.what();
     }
 }
 
@@ -329,6 +329,13 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+#ifdef __EMSCRIPTEN__
+extern "C" void pudgywars_start()
+{
+    main(0, nullptr);
+}
+#endif
 
 void main_game()
 {

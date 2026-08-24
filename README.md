@@ -9,7 +9,7 @@
 | Player skins | Exactly four original 192 × 32 PNG sheets live in `data/gfx/skins/`: **Polly** (pink), **Retsba** (red), **Pengu** (blue), and **Abster** (green). |
 | Standard maps | `data/maps/` contains ten ice-, snow-, winter-, or frozen-themed `.map` files only. |
 | Preserved content | Upstream skin files and non-ice maps are retained under `data/gfx/skins-original/` and `data/maps-disabled/` for reversible curation. |
-| Game code | No game logic or C++ source changes were made for the character or map retheme. |
+| Game code | The gameplay systems remain native and unchanged. A narrow WebAssembly launcher and direct touch-to-existing-control adapter were added only for landscape mobile testing. |
 
 The six frames in each skin sheet are ordered as idle, two walk frames, jump, flattened defeat, and airborne defeat. Sheets use magenta (`#FF00FF`) as their transparent colour key and remain at the engine-required **192 × 32** dimensions.
 
@@ -34,6 +34,17 @@ cmake --build build -j4
 ```
 
 At the character-selection screen, assign Polly, Retsba, Pengu, and Abster to the four local players. No asset rebuild or configuration manifest is required.
+
+## Landscape mobile web build
+
+The repository also supports a browser build of the same native engine through Emscripten. It keeps the original 640 × 480 logical game surface, blocks portrait presentation, preloads the rethemed data pack, and adds a thumb-reachable player-one touch pad plus jump/select action. The underlying game remains local multiplayer; the mobile control layer is intended for a single-device test session.
+
+```bash
+emcmake cmake -S . -B build-web -DCMAKE_BUILD_TYPE=Release -DNO_NETWORK=ON
+cmake --build build-web --target smw -j2
+```
+
+The generated `smw.html`, `smw.js`, `smw.wasm`, and `smw.data` files must be served over HTTP(S). On a phone, open the web page in **landscape**, wait for the data preload, then use the left thumb pad for movement/menu navigation and the right action zone for jump/select.
 
 ## Credits and provenance
 

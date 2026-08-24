@@ -7,7 +7,6 @@
 #include "util/DirIterator.h"
 
 #include <algorithm>
-#include <format>
 #include <fstream>
 #include <variant>
 
@@ -271,7 +270,7 @@ MusicList::MusicList()
             if (auto pack = MusicPack::load(*path))
                 m_entries.emplace_back(std::move(*pack));
         } catch (const std::exception& ex) {
-            throw std::format("ERROR: Could not load music pack at {}\nReason: {}", path->string(), ex.what());
+            throw std::string("ERROR: Could not load music pack at ") + path->string() + "\nReason: " + ex.what();
         }
     }
 
@@ -566,7 +565,7 @@ WorldMusicList::WorldMusicList()
                 m_entries.emplace_back(std::move(*pack));
             }
         } catch (const std::exception& ex) {
-            throw std::format("ERROR: Could not load world music pack at {}\nReason: {}", path->string(), ex.what());
+            throw std::string("ERROR: Could not load world music pack at ") + path->string() + "\nReason: " + ex.what();
         }
     }
     if (m_entries.empty()) {

@@ -1524,7 +1524,7 @@ void LoadMapObjects(bool fPreview)
     for (short x = 0; x < MAPWIDTH; x++) {
         for (short y = 0; y < MAPHEIGHT; y++) {
             const short typeId = g_map->objectdata[x][y].iType;
-            IO_Block* block = spawnMapBlock(typeId, {x * 32, y * 32}, g_map->objectdata[x][y], g_map->iSwitches);
+            IO_Block* block = spawnMapBlock(typeId, {static_cast<short>(x * 32), static_cast<short>(y * 32)}, g_map->objectdata[x][y], g_map->iSwitches);
             g_map->blockdata[x][y] = block;
 
             if (block)

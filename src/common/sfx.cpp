@@ -2,7 +2,6 @@
 
 #include "SDL.h"
 
-#include <format>
 #include <iostream>
 #include <string>
 
@@ -77,7 +76,7 @@ sfxSound::sfxSound(const fs::path& path)
 
     m_sfx = MixChunkPtr(Mix_LoadWAV(path_str.c_str()));
     if (!m_sfx)
-        throw std::format("Failed to load {}: {}", path_str, Mix_GetError());
+        throw std::string("Failed to load ") + path_str + ": " + Mix_GetError();
 
     std::cout << " done" << std::endl;
 }
@@ -133,7 +132,7 @@ sfxMusic::sfxMusic(const fs::path& path)
 
     m_music = MixMusicPtr(Mix_LoadMUS(path_str.c_str()));
     if (!m_music)
-        throw std::format("Failed to load {}: {}", path_str, Mix_GetError());
+        throw std::string("Failed to load ") + path_str + ": " + Mix_GetError();
 
     std::cout << " done" << std::endl;
 }

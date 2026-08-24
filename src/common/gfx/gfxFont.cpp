@@ -4,7 +4,6 @@
 
 #include "SDL_image.h"
 
-#include <format>
 #include <iostream>
 
 extern SDL_Surface * blitdest;
@@ -22,7 +21,7 @@ gfxFont::gfxFont(const std::filesystem::path& path)
     std::cout << "loading font " << path_str << " ...";
     auto surf = SdlSurfacePtr(IMG_Load(path_str.c_str()));
     if (!surf) {
-        throw std::format("Couldn't load {}: {}", path_str, IMG_GetError());
+        throw std::string("Couldn't load ") + path_str + ": " + IMG_GetError();
     }
 
     if (SDL_MUSTLOCK(surf.get()))
@@ -61,24 +60,24 @@ gfxFont::gfxFont(const std::filesystem::path& path)
             x++;
 
         const int width = x - start;
-        m_glyph_areas.emplace_back(start, width);
+        m_glyph_areas.push_back({start, width});
     }
 
     if (m_glyph_areas.empty())
-        throw std::format("Didn't find any characters on font image {}", path_str);
+        throw std::string("Didn't find any characters on font image ") + path_str;
 
     m_glyph_areas.shrink_to_fit();
 
     const Uint32 color_key = getRawPixel(surf.get(), 0, 1);
     if (SDL_SetColorKey(surf.get(), SDL_TRUE, color_key) < 0)
-        throw std::format("Couldn't set color key on font image: {}", SDL_GetError());
+        throw std::string("Couldn't set color key on font image: ") + SDL_GetError();
 
     auto surf_opti = SdlSurfacePtr(SDL_ConvertSurface(surf.get(), screen->format, 0));
     if (!surf_opti)
-        throw std::format("Couldn't convert {} to the display's pixel format: {}", path_str, SDL_GetError());
+        throw std::string("Couldn't convert ") + path_str + " to the display's pixel format: " + SDL_GetError();
 
     if (SDL_SetSurfaceRLE(surf_opti.get(), 1) < 0)
-        throw std::format("Couldn't set RLE acceleration for {}: {}", path_str, SDL_GetError());
+        throw std::string("Couldn't set RLE acceleration for ") + path_str + ": " + SDL_GetError();
 
     m_sprite = gfxSprite(std::move(surf_opti), std::nullopt);
     std::cout << "done" << std::endl;

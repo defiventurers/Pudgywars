@@ -9,6 +9,7 @@
 #include <sstream>
 #include <cstdio>
 #include <cstdlib>
+#include <string>
 
 extern SDL_Surface* screen;
 
@@ -16,16 +17,15 @@ extern SDL_Surface* screen;
 #define GFX_SCREEN_W 640
 #define GFX_SCREEN_H 480
 
-template<typename... Args>
-[[noreturn]] void throw_error(std::format_string<Args...> fmt, Args&&... args) {
-    throw std::runtime_error(std::format(fmt, std::forward<Args>(args)...));
+[[noreturn]] void throw_error(const char* prefix, const char* detail) {
+    throw std::runtime_error(std::string(prefix) + detail);
 }
 
 namespace {
 void initSdl()
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
-        throw_error("SDL error: {}", SDL_GetError());
+        throw_error("SDL error: ", SDL_GetError());
 
     SDL_version sdl_version;
     SDL_GetVersion(&sdl_version);
@@ -33,7 +33,7 @@ void initSdl()
 
     constexpr int IMG_FLAGS = IMG_INIT_PNG;
     if ((IMG_Init(IMG_FLAGS) & IMG_FLAGS) != IMG_FLAGS)
-        throw_error("SDL_image error: {}", IMG_GetError());
+        throw_error("SDL_image error: ", IMG_GetError());
 
     const SDL_version* img_version = IMG_Linked_Version();
     printf("[gfx] SDL_image %d.%d.%d loaded.\n", img_version->major, img_version->minor, img_version->patch);

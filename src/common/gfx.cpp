@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdio>
-#include <format>
 #include <iostream>
 #include <string>
 
@@ -127,10 +126,10 @@ gfxSprite createSkinSurface(
 
     const auto color_key = SDL_MapRGB(out.getSurface()->format, colors::MAGENTA.r, colors::MAGENTA.g, colors::MAGENTA.b);
     if (SDL_SetColorKey(out.getSurface(), SDL_TRUE, color_key) < 0) {
-        throw std::format("Couldn't set color key for new skin surface: {}", SDL_GetError());
+        throw std::string("Couldn't set color key for new skin surface: ") + SDL_GetError();
     }
     if (SDL_SetSurfaceRLE(out.getSurface(), 1) < 0) {
-        throw std::format("Couldn't set RLE acceleration for new skin surface: {}", SDL_GetError());
+        throw std::string("Couldn't set RLE acceleration for new skin surface: ") + SDL_GetError();
     }
 
     return out;
@@ -218,7 +217,7 @@ SpriteStrip gfx_loadmenuskin(const fs::path& path, short colorScheme, bool fLoad
     const gfxSprite skin = ImageLoader(path).withoutColorKey().withoutOptimization().create();
 
     if (!validSkinSurface(skin))
-        throw std::format("Invalid skin file: {} has incorrect dimensions", path.generic_string());
+        throw std::string("Invalid skin file: ") + path.generic_string() + " has incorrect dimensions";
 
     SpriteStrip strip;
 
@@ -240,7 +239,7 @@ SpriteStrip gfx_loadfullskin(const fs::path& path, short colorScheme)
     const gfxSprite skin = ImageLoader(path).withoutColorKey().withoutOptimization().create();
 
     if (!validSkinSurface(skin))
-        throw std::format("Invalid skin file: {} has incorrect dimensions", path.generic_string());
+        throw std::string("Invalid skin file: ") + path.generic_string() + " has incorrect dimensions";
 
     SpriteStrip strip;
 

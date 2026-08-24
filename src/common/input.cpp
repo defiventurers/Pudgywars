@@ -3,7 +3,75 @@
 #include "GameValues.h"
 #include "GlobalConstants.h"
 
+#include <unordered_map>
+
 extern CGameValues game_values;
+
+#ifdef __EMSCRIPTEN__
+namespace {
+enum TouchAction : int {
+    TouchUp = 1 << 0,
+    TouchDown = 1 << 1,
+    TouchLeft = 1 << 2,
+    TouchRight = 1 << 3,
+    TouchAction = 1 << 4,
+    TouchCancel = 1 << 5,
+};
+
+std::unordered_map<SDL_FingerID, int> touch_actions;
+
+int actionForTouch(const SDL_TouchFingerEvent& touch)
+{
+    // Left side: a four-way thumb pad. Right side: a large action button.
+    if (touch.x > 0.86f && touch.y < 0.26f)
+        return TouchCancel;
+    if (touch.x < 0.42f && touch.y > 0.45f) {
+        const float dx = touch.x - 0.20f;
+        const float dy = touch.y - 0.75f;
+        if (dx * dx > dy * dy)
+            return dx < 0.0f ? TouchLeft : TouchRight;
+        return dy < 0.0f ? TouchUp : TouchDown;
+    }
+    if (touch.x > 0.67f && touch.y > 0.45f)
+        return TouchAction;
+    return 0;
+}
+
+void applyTouchActions(COutputControl& output, short gameState)
+{
+    int combined = 0;
+    for (const auto& [fingerId, actions] : touch_actions)
+        combined |= actions;
+
+    const bool gameKeys[NUM_KEYS] = {
+        (combined & TouchLeft) != 0,
+        (combined & TouchRight) != 0,
+        (combined & TouchUp) != 0,
+        (combined & TouchDown) != 0,
+        (combined & TouchAction) != 0,
+        false,
+        false,
+        (combined & TouchCancel) != 0,
+    };
+    const bool menuKeys[NUM_KEYS] = {
+        (combined & TouchUp) != 0,
+        (combined & TouchDown) != 0,
+        (combined & TouchLeft) != 0,
+        (combined & TouchRight) != 0,
+        (combined & TouchAction) != 0,
+        (combined & TouchCancel) != 0,
+        false,
+        false,
+    };
+    const bool* keys = gameState == 0 ? gameKeys : menuKeys;
+    for (int key = 0; key < NUM_KEYS; key++) {
+        if (keys[key] && !output.keys[key].fDown)
+            output.keys[key].fPressed = true;
+        output.keys[key].fDown = keys[key];
+    }
+}
+} // namespace
+#endif
 
 CPlayerInput::CPlayerInput()
 {
@@ -66,6 +134,17 @@ void CPlayerInput::ResetKeys()
 //iGameState == 0 for in game and 1 for menu
 void CPlayerInput::Update(SDL_Event event, short iGameState)
 {
+#ifdef __EMSCRIPTEN__
+    if (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERMOTION || event.type == SDL_FINGERUP) {
+        if (event.type == SDL_FINGERUP)
+            touch_actions.erase(event.tfinger.fingerId);
+        else
+            touch_actions[event.tfinger.fingerId] = actionForTouch(event.tfinger);
+        applyTouchActions(outputControls[0], iGameState);
+        return;
+    }
+#endif
+
 	bool fFound = false;
     for (short iPlayer = -1; iPlayer < MAX_PLAYERS; iPlayer++) {
 		CInputControl * inputControl;

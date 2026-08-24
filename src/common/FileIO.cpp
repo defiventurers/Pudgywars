@@ -4,7 +4,7 @@
 
 #include <cassert>
 #include <cstring>
-#include <format>
+#include <sstream>
 #include <stdexcept>
 
 BinaryFile::BinaryFile(const char* path, const char* options)
@@ -31,11 +31,11 @@ void BinaryFile::fread_or_exception(void* ptr, size_t size, size_t count)
 {
     long pos = ftell(fp);
     if (fread(ptr, size, count, fp) != count) {
-        std::string msg = std::format(
-            "File read error in {}\n"
-            "Tried to read {} bytes at position {}, but failed\n"
-            "The file might be damaged, or it's not in the expected format",
-            m_path, size * count, pos);
+        std::ostringstream message;
+        message << "File read error in " << m_path << "\n"
+            << "Tried to read " << size * count << " bytes at position " << pos << ", but failed\n"
+            << "The file might be damaged, or it's not in the expected format";
+        std::string msg = message.str();
         if (std::ferror(fp)) {
             msg += "\nSystem message: ";
             msg += std::strerror(errno);
@@ -48,10 +48,10 @@ void BinaryFile::fwrite_or_exception(const void* ptr, size_t size, size_t count)
 {
     long pos = ftell(fp);
     if (fwrite(ptr, size, count, fp) != count) {
-        std::string msg = std::format(
-            "File write error in {}\n"
-            "Tried to write {} bytes at position {}, but failed",
-            m_path, size * count, pos);
+        std::ostringstream message;
+        message << "File write error in " << m_path << "\n"
+            << "Tried to write " << size * count << " bytes at position " << pos << ", but failed";
+        std::string msg = message.str();
         if (std::ferror(fp)) {
             msg += "\nSystem message: ";
             msg += std::strerror(errno);
@@ -131,10 +131,10 @@ void BinaryFile::write_float(float value)
 void BinaryFile::write_string_long(const std::string& string)
 {
     if (string.length() > 255) {
-        std::string msg = std::format(
-            "File write error in {}\n"
-            "Tried to write a text that would take {} bytes, which is too long",
-            m_path, string.length());
+        std::ostringstream message;
+        message << "File write error in " << m_path << "\n"
+            << "Tried to write a text that would take " << string.length() << " bytes, which is too long";
+        std::string msg = message.str();
         throw std::runtime_error(std::move(msg));
     }
 

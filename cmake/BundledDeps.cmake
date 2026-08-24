@@ -104,9 +104,16 @@ smw_declare_gitrepo(
 )
 
 
-FetchContent_MakeAvailable(SDL2 SDL2_image SDL2_mixer toml11 zlib)
-if(NOT NO_NETWORK)
-    FetchContent_MakeAvailable(enet)
+if(EMSCRIPTEN)
+    # SDL, SDL_image, SDL_mixer, and zlib are supplied by Emscripten ports;
+    # fetching their desktop CMake projects creates unsupported shared-library
+    # install rules during WebAssembly configuration.
+    FetchContent_MakeAvailable(toml11)
+else()
+    FetchContent_MakeAvailable(SDL2 SDL2_image SDL2_mixer toml11 zlib)
+    if(NOT NO_NETWORK)
+        FetchContent_MakeAvailable(enet)
+    endif()
 endif()
 
 

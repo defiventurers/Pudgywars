@@ -6,6 +6,7 @@
 #include <array>
 #include <filesystem>
 #include <optional>
+#include <unordered_map>
 
 
 enum PlayerPalette {
