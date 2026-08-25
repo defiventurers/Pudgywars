@@ -94,6 +94,11 @@ void applyRemoteGameplayActions(COutputControl& output, int actions)
 }
 } // namespace
 
+bool pudgywars_remote_player_active(short player)
+{
+    return player >= 0 && player < MAX_PLAYERS && (remote_player_mask & (1 << player)) != 0;
+}
+
 extern "C" void pudgywars_mobile_control(int slot, int action, int pressed)
 {
     (void)slot;

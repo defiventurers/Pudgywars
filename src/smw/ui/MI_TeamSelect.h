@@ -19,6 +19,7 @@ class MI_TeamSelect : public UI_Control
 		MenuCodeEnum Modify(bool modify) override;
 
 		void Reset();
+		void MarkRemotePlayersReady();
 		short OrganizeTeams();
 		short GetTeam(short iPlayerID);
 

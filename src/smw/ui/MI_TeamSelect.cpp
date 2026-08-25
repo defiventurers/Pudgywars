@@ -3,6 +3,7 @@
 #include "gfx.h"
 #include "Game.h"
 #include "GameValues.h"
+#include "input.h"
 #include "RandomNumberGenerator.h"
 #include "ResourceManager.h"
 #include "FileList.h"
@@ -239,6 +240,24 @@ MenuCodeEnum MI_TeamSelect::Modify(bool modify)
 {
     fModifying = modify;
     return MENU_CODE_MODIFY_ACCEPTED;
+}
+
+void MI_TeamSelect::MarkRemotePlayersReady()
+{
+#ifdef __EMSCRIPTEN__
+    for (short iPlayer = 0; iPlayer < MAX_PLAYERS; iPlayer++) {
+        if (game_values.playercontrol[iPlayer] > 0 && pudgywars_remote_player_active(iPlayer))
+            fReady[iPlayer] = true;
+    }
+
+    fAllReady = true;
+    for (short iPlayer = 0; iPlayer < MAX_PLAYERS; iPlayer++) {
+        if (game_values.playercontrol[iPlayer] > 0 && !fReady[iPlayer]) {
+            fAllReady = false;
+            break;
+        }
+    }
+#endif
 }
 
 void MI_TeamSelect::FindNewTeam(short iPlayerID, short iDirection)

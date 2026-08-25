@@ -12,6 +12,7 @@ public:
     UI_TeamSelectMenu();
 
     void ResetTeamSelect();
+    void MarkRemotePlayersReady();
     short GetTeamCount() const;
 
 private:

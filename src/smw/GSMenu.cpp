@@ -547,9 +547,19 @@ void MenuState::update()
         SetNextScriptOperation();
 #endif
 
-    bool fGenerateMapThumbs = false;
-    if (AppState::Menu == game_values.appstate) {
-        MenuCodeEnum code = mCurrentMenu->SendInput(&game_values.playerInput);
+	bool fGenerateMapThumbs = false;
+	if (AppState::Menu == game_values.appstate) {
+#ifdef __EMSCRIPTEN__
+        // Phone controllers deliberately do not navigate host menus. Once the
+        // host reaches Team Select, however, every connected remote slot must
+        // be ready before the native game can leave this screen. Set that
+        // native readiness flag here instead of forwarding menu keys from
+        // remote phones to arbitrary host menus.
+        if (mCurrentMenu == mTeamSelectMenu.get()) {
+            mTeamSelectMenu->MarkRemotePlayersReady();
+        }
+#endif
+		MenuCodeEnum code = mCurrentMenu->SendInput(&game_values.playerInput);
 
         // Shortcut to game start
         if (netplay.active) {

@@ -33,6 +33,11 @@ void UI_TeamSelectMenu::ResetTeamSelect()
     miTeamSelect->Reset();
 }
 
+void UI_TeamSelectMenu::MarkRemotePlayersReady()
+{
+    miTeamSelect->MarkRemotePlayersReady();
+}
+
 short UI_TeamSelectMenu::GetTeamCount() const
 {
     return miTeamSelect->OrganizeTeams();
