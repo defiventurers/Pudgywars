@@ -48,6 +48,12 @@ void quitSdl()
 SDL_Window* createWindow(bool fullscreen)
 {
     Uint32 window_flags = SDL_WINDOW_RESIZABLE;
+#ifdef __EMSCRIPTEN__
+    // SDL's browser renderer needs an explicit OpenGL-capable window to bind the
+    // Module canvas to a WebGL context. Without this flag SDL_RenderPresent
+    // reaches glFlush with no active GL context and the native startup aborts.
+    window_flags |= SDL_WINDOW_OPENGL;
+#endif
     if (fullscreen)
         window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 

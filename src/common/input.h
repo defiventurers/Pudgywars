@@ -43,6 +43,12 @@
 
 #define KEY_NONE            -1
 
+#ifdef __EMSCRIPTEN__
+// The browser controller bridge needs a per-frame state signal because SDL
+// input events are sparse when phones send their state directly through JS.
+extern "C" void pudgywars_set_browser_input_mode(short game_state);
+#endif
+
 
 struct CKeyState {
 	bool fDown;

@@ -20,6 +20,7 @@ enum TouchAction : int {
 
 std::unordered_map<SDL_FingerID, int> touch_actions;
 short last_touch_game_state = 1;
+int remote_player_mask = 0;
 
 int actionForTouch(const SDL_TouchFingerEvent& touch)
 {
@@ -71,11 +72,35 @@ void applyTouchActions(COutputControl& output, short gameState)
         output.keys[key].fDown = keys[key];
     }
 }
+
+void applyRemoteGameplayActions(COutputControl& output, int actions)
+{
+    const bool gameKeys[NUM_KEYS] = {
+        (actions & TouchLeft) != 0,
+        (actions & TouchRight) != 0,
+        (actions & TouchUp) != 0 || (actions & TouchAction) != 0,
+        (actions & TouchDown) != 0,
+        (actions & TouchAction) != 0,
+        false,
+        false,
+        (actions & TouchCancel) != 0,
+    };
+
+    for (int key = 0; key < NUM_KEYS; key++) {
+        if (gameKeys[key] && !output.keys[key].fDown)
+            output.keys[key].fPressed = true;
+        output.keys[key].fDown = gameKeys[key];
+    }
+}
 } // namespace
 
 extern "C" void pudgywars_mobile_control(int slot, int action, int pressed)
 {
     (void)slot;
+    // Once a phone has claimed player one, the host remains responsible for
+    // menus but must not compete with that controller during gameplay.
+    if (last_touch_game_state == 0 && (remote_player_mask & 1) != 0)
+        return;
     CInputPlayerControl* player = game_values.playerInput.inputControls[0];
     if (!player)
         return;
@@ -110,6 +135,35 @@ extern "C" void pudgywars_mobile_control(int slot, int action, int pressed)
         if (action & TouchAction) push_key(keys.menu_select);
         if (action & TouchCancel) push_key(keys.menu_cancel);
     }
+}
+
+extern "C" void pudgywars_set_remote_players(int active_mask)
+{
+    remote_player_mask = active_mask & 0x0f;
+    for (int player = 0; player < MAX_PLAYERS; player++) {
+        // Keep player one enabled as the host's menu/start fallback. A claimed
+        // remote player one still owns that slot during active gameplay.
+        const bool enabled = player == 0 || (remote_player_mask & (1 << player)) != 0;
+        game_values.playercontrol[player] = enabled ? 1 : 0;
+        if (!enabled)
+            applyRemoteGameplayActions(game_values.playerInput.outputControls[player], 0);
+    }
+}
+
+extern "C" void pudgywars_set_browser_input_mode(short game_state)
+{
+    last_touch_game_state = game_state;
+}
+
+extern "C" void pudgywars_remote_control(int player, int actions)
+{
+    if (player < 0 || player >= MAX_PLAYERS)
+        return;
+    if (last_touch_game_state != 0 || (remote_player_mask & (1 << player)) == 0) {
+        applyRemoteGameplayActions(game_values.playerInput.outputControls[player], 0);
+        return;
+    }
+    applyRemoteGameplayActions(game_values.playerInput.outputControls[player], actions);
 }
 #endif
 

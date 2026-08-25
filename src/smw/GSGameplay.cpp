@@ -2504,6 +2504,9 @@ void GameplayState::update_world()
 
 void GameplayState::update()
 {
+#ifdef __EMSCRIPTEN__
+    pudgywars_set_browser_input_mode(game_values.flags.exitinggame ? 1 : 0);
+#endif
     read_network();
 
     if (!netplay.active) {

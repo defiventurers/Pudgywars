@@ -385,6 +385,9 @@ void MenuState::onEnterState()
 
 void MenuState::update()
 {
+#ifdef __EMSCRIPTEN__
+    pudgywars_set_browser_input_mode(1);
+#endif
     if (netplay.active)
         netplay.client.update();
 
