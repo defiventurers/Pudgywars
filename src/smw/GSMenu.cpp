@@ -119,6 +119,28 @@ MenuState& MenuState::instance()
     return menu;
 }
 
+int MenuState::browserFlowStage() const
+{
+    if (mCurrentMenu == mMainMenu.get())
+        return 1;
+    if (mCurrentMenu == mTeamSelectMenu.get())
+        return 2;
+    return 3;
+}
+
+#ifdef __EMSCRIPTEN__
+extern "C" int pudgywars_get_browser_flow_stage()
+{
+    if (game_values.appstate == AppState::Splash)
+        return 0;
+    if (game_values.appstate == AppState::Menu)
+        return MenuState::instance().browserFlowStage();
+    if (game_values.appstate == AppState::Game)
+        return 4;
+    return 3;
+}
+#endif
+
 bool MenuState::init()
 {
     mMainMenu = std::make_unique<UI_MainMenu>();
@@ -557,6 +579,24 @@ void MenuState::update()
         // remote phones to arbitrary host menus.
         if (mCurrentMenu == mTeamSelectMenu.get()) {
             mTeamSelectMenu->MarkRemotePlayersReady();
+        }
+
+        // The browser shortcut advances only after the real engine has entered
+        // the corresponding screen, rather than relying on browser timers.
+        if (pudgywars_browser_quick_play_requested()) {
+            COutputControl& hostKeys = game_values.playerInput.outputControls[0];
+            if (mCurrentMenu == mMainMenu.get()) {
+                if (pudgywars_browser_quick_play_step() == 0)
+                    hostKeys.menu_right.fPressed = true;
+                else
+                    hostKeys.menu_select.fPressed = true;
+                pudgywars_advance_browser_quick_play();
+            } else if (mCurrentMenu == mTeamSelectMenu.get() || mCurrentMenu == mGameSettingsMenu.get()) {
+                hostKeys.menu_select.fPressed = true;
+                pudgywars_advance_browser_quick_play();
+            } else {
+                pudgywars_finish_browser_quick_play();
+            }
         }
 #endif
 		MenuCodeEnum code = mCurrentMenu->SendInput(&game_values.playerInput);
@@ -1530,6 +1570,9 @@ bool MenuState::ReadTourFile()
 void MenuState::StartGame()
 {
     printf("> StartGame\n");
+#ifdef __EMSCRIPTEN__
+    pudgywars_finish_browser_quick_play();
+#endif
 #ifdef _DEBUG
     iScriptState = 2;
     fScriptRunPreGameOptions = false;

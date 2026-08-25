@@ -6,6 +6,7 @@
 #include "GameValues.h"
 #include "GSMenu.h"
 #include "GSGameplay.h"
+#include "input.h"
 #include "eyecandy.h"
 #include "path.h"
 #include "ResourceManager.h"
@@ -155,7 +156,8 @@ void SplashScreenState::update()
     }
 
     for (int iPlayer = 0; iPlayer < 4; iPlayer++) {
-        if (game_values.playerInput.outputControls[iPlayer].menu_select.fPressed ||
+        if (pudgywars_browser_quick_play_requested() ||
+            game_values.playerInput.outputControls[iPlayer].menu_select.fPressed ||
             game_values.playerInput.outputControls[iPlayer].menu_cancel.fPressed ||
             game_values.playerInput.outputControls[iPlayer].menu_random.fPressed) {
             //if (state <= 6)

@@ -72,6 +72,7 @@ class MenuState : public GameState
 	public:
         bool init() override;
         void update() override;
+        int browserFlowStage() const;
 
         static MenuState& instance();
 

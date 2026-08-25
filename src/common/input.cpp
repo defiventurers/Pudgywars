@@ -21,6 +21,8 @@ enum TouchAction : int {
 std::unordered_map<SDL_FingerID, int> touch_actions;
 short last_touch_game_state = 1;
 int remote_player_mask = 0;
+bool browser_quick_play_requested = false;
+int browser_quick_play_step = 0;
 
 int actionForTouch(const SDL_TouchFingerEvent& touch)
 {
@@ -99,6 +101,34 @@ bool pudgywars_remote_player_active(short player)
     return player >= 0 && player < MAX_PLAYERS && (remote_player_mask & (1 << player)) != 0;
 }
 
+bool pudgywars_browser_quick_play_requested()
+{
+    return browser_quick_play_requested;
+}
+
+int pudgywars_browser_quick_play_step()
+{
+    return browser_quick_play_step;
+}
+
+void pudgywars_advance_browser_quick_play()
+{
+    if (browser_quick_play_requested)
+        ++browser_quick_play_step;
+}
+
+void pudgywars_finish_browser_quick_play()
+{
+    browser_quick_play_requested = false;
+    browser_quick_play_step = 0;
+}
+
+extern "C" void pudgywars_begin_browser_quick_play()
+{
+    browser_quick_play_requested = true;
+    browser_quick_play_step = 0;
+}
+
 extern "C" void pudgywars_mobile_control(int slot, int action, int pressed)
 {
     (void)slot;
@@ -140,6 +170,9 @@ extern "C" void pudgywars_mobile_control(int slot, int action, int pressed)
         if (action & TouchAction) push_key(keys.menu_select);
         if (action & TouchCancel) push_key(keys.menu_cancel);
     }
+
+    if (pressed && (action & TouchCancel))
+        pudgywars_finish_browser_quick_play();
 }
 
 extern "C" void pudgywars_set_remote_players(int active_mask)

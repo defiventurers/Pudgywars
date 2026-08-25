@@ -47,7 +47,13 @@
 // The browser controller bridge needs a per-frame state signal because SDL
 // input events are sparse when phones send their state directly through JS.
 extern "C" void pudgywars_set_browser_input_mode(short game_state);
+extern "C" void pudgywars_begin_browser_quick_play();
+extern "C" int pudgywars_get_browser_flow_stage();
 bool pudgywars_remote_player_active(short player);
+bool pudgywars_browser_quick_play_requested();
+int pudgywars_browser_quick_play_step();
+void pudgywars_advance_browser_quick_play();
+void pudgywars_finish_browser_quick_play();
 #endif
 
 
